@@ -39,12 +39,22 @@ class AnalyzeRequest(BaseModel):
 @app.post("/analyze")
 def analyze_resume(req: AnalyzeRequest):
     try:
-        result = career_agent.run_sync(
-            f"Target Role: {req.role}\nResume:\n{req.resume_text}"
-        )
+        prompt = f"""
+Target Role: {req.role}
+
+Resume:
+{req.resume_text}
+
+Give clear, structured, actionable resume feedback.
+"""
+
+        result = career_agent.run_sync(prompt)
+
+        # ✅ FIX: use result.output (NOT result.data)
         return {
-            "analysis": result.data
+            "analysis": result.output
         }
+
     except Exception as e:
         logging.exception("AI processing failed")
         raise HTTPException(status_code=500, detail=str(e))
