@@ -66,12 +66,7 @@
             cursor: pointer;
         }
 
-        button:disabled {
-            background: #93c5fd;
-            cursor: not-allowed;
-        }
-
-        button:hover:not(:disabled) {
+        button:hover {
             background: #1d4ed8;
         }
 
@@ -113,7 +108,7 @@
         <label>Resume Content</label>
         <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
 
-        <button id="analyzeBtn" onclick="analyze()">Analyze Resume</button>
+        <button onclick="analyze()">Analyze Resume</button>
 
         <div id="loading" class="loading" style="display:none;">
             Analyzing your resume...
@@ -128,11 +123,10 @@
 
     <script>
         async function analyze() {
-            const role = document.getElementById("role").value.trim();
-            const resume = document.getElementById("resume").value.trim();
+            const role = document.getElementById("role").value;
+            const resume = document.getElementById("resume").value;
             const output = document.getElementById("output");
             const loading = document.getElementById("loading");
-            const button = document.getElementById("analyzeBtn");
 
             if (!role || !resume) {
                 alert("Please enter both role and resume text.");
@@ -141,7 +135,6 @@
 
             output.style.display = "none";
             loading.style.display = "block";
-            button.disabled = true;
 
             try {
                 const res = await fetch("/analyze", {
@@ -156,19 +149,16 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    throw new Error(data.detail || "AI analysis failed");
+                    throw new Error(data.detail || "Something went wrong");
                 }
 
-                // ✅ FIXED LINE — THIS WAS THE BUG
+                // ✅ FIX IS HERE
                 output.innerText = data.analysis;
-
                 output.style.display = "block";
-                output.scrollIntoView({ behavior: "smooth" });
             } catch (err) {
                 alert(err.message);
             } finally {
                 loading.style.display = "none";
-                button.disabled = false;
             }
         }
     </script>
