@@ -8,40 +8,159 @@
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
-            display: flex;
-            justify-content: center;
-            padding: 40px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 0;
+            color: #0f172a;
         }
 
-        .card {
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 32px;
             background: white;
-            width: 600px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
         }
 
-        h2 {
-            margin-bottom: 10px;
+        h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: #475569;
+            margin-bottom: 24px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-top: 16px;
+            display: block;
         }
 
         input,
         textarea {
             width: 100%;
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5f5;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 160px;
+            resize: vertical;
         }
 
         button {
-            margin-top: 15px;
-            padding: 12px;
-            width: 100%;
+            margin-top: 24px;
+            padding: 14px 24px;
             font-size: 16px;
-            background: #4f46e5;
+            background: #2563eb;
             color: white;
             border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .loading {
+            margin-top: 16px;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .output {
+            margin-top: 32px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #2563eb;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>CareerPrep AI</h1>
+        <p class="subtitle">
+            Get personalized resume feedback powered by a Generative AI agent.
+        </p>
+
+        <label>Target Job Role</label>
+        <input id="role" placeholder="e.g. Software Engineer" />
+
+        <label>Resume Content</label>
+        <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
+
+        <button onclick="analyze()">Analyze Resume</button>
+
+        <div id="loading" class="loading" style="display:none;">
+            Analyzing your resume...
+        </div>
+
+        <div id="output" class="output" style="display:none;"></div>
+
+        <footer>
+            Built using Pydantic AI · FastAPI · OpenRouter
+        </footer>
+    </div>
+
+    <script>
+        async function analyze() {
+            const role = document.getElementById("role").value;
+            const resume = document.getElementById("resume").value;
+            const output = document.getElementById("output");
+            const loading = document.getElementById("loading");
+
+            if (!role || !resume) {
+                alert("Please enter both role and resume text.");
+                return;
+            }
+
+            output.style.display = "none";
+            loading.style.display = "block";
+
+            try {
+                const res = await fetch("/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        role: role,
+                        resume_text: resume
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "Something went wrong");
+                }
+
+                output.innerText = data.output;
+                output.style.display = "block";
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>
