@@ -3,6 +3,7 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from agent import career_agent
 import logging
@@ -10,28 +11,40 @@ import os
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(title="CareerPrep AI")
+app = FastAPI(
+    title="CareerPrep AI",
+    version="0.1.0",
+)
+
+# ---------- FRONTEND SERVING ----------
+
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+app.mount(
+    "/static",
+    StaticFiles(directory=FRONTEND_DIR),
+    name="static"
+)
+
+# ---------- API ----------
 
 class AnalyzeRequest(BaseModel):
     role: str
     resume_text: str
 
-@app.get("/")
-def serve_ui():
-    return FileResponse("frontend/index.html")
-
 @app.post("/analyze")
 def analyze_resume(req: AnalyzeRequest):
     try:
         result = career_agent.run_sync(
-            f"""
-Target Role: {req.role}
-
-Resume:
-{req.resume_text}
-"""
+            f"Target Role: {req.role}\nResume:\n{req.resume_text}"
         )
-        return {"output": result.output}
+        return {
+            "analysis": result.data
+        }
     except Exception as e:
         logging.exception("AI processing failed")
         raise HTTPException(status_code=500, detail=str(e))
