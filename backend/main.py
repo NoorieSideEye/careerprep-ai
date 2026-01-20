@@ -40,33 +40,12 @@ class AnalyzeRequest(BaseModel):
 def analyze_resume(req: AnalyzeRequest):
     try:
         result = career_agent.run_sync(
-            f"""
-You are a professional career preparation AI.
-
-Target Role:
-{req.role}
-
-Resume:
-{req.resume_text}
-
-Give clear, structured, actionable feedback with:
-- Strengths
-- Gaps
-- Improvements
-- Final summary
-"""
+            f"Target Role: {req.role}\n\nResume:\n{req.resume_text}"
         )
 
-        # ✅ CORRECT + SAFE OUTPUT EXTRACTION
-        if hasattr(result, "output_text") and result.output_text:
-            analysis = result.output_text
-        elif hasattr(result, "output") and result.output:
-            analysis = str(result.output)
-        else:
-            analysis = str(result)
-
+        # ✅ THIS IS THE FIX
         return {
-            "analysis": analysis
+            "analysis": result.output
         }
 
     except Exception as e:
