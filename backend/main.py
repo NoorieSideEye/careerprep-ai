@@ -16,7 +16,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# ---------- FRONTEND SERVING ----------
+# ---------- FRONTEND ----------
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
@@ -39,20 +39,34 @@ class AnalyzeRequest(BaseModel):
 @app.post("/analyze")
 def analyze_resume(req: AnalyzeRequest):
     try:
-        prompt = f"""
-Target Role: {req.role}
+        result = career_agent.run_sync(
+            f"""
+You are a professional career preparation AI.
+
+Target Role:
+{req.role}
 
 Resume:
 {req.resume_text}
 
-Give clear, structured, actionable resume feedback.
+Give clear, structured, actionable feedback with:
+- Strengths
+- Gaps
+- Improvements
+- Final summary
 """
+        )
 
-        result = career_agent.run_sync(prompt)
+        # ✅ CORRECT + SAFE OUTPUT EXTRACTION
+        if hasattr(result, "output_text") and result.output_text:
+            analysis = result.output_text
+        elif hasattr(result, "output") and result.output:
+            analysis = str(result.output)
+        else:
+            analysis = str(result)
 
-        # ✅ FIX: use result.output (NOT result.data)
         return {
-            "analysis": result.output
+            "analysis": analysis
         }
 
     except Exception as e:
