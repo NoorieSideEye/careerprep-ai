@@ -16,7 +16,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# ---------- FRONTEND ----------
+# ---------- FRONTEND SERVING ----------
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
@@ -40,12 +40,27 @@ class AnalyzeRequest(BaseModel):
 def analyze_resume(req: AnalyzeRequest):
     try:
         result = career_agent.run_sync(
-            f"Target Role: {req.role}\n\nResume:\n{req.resume_text}"
+            f"""
+            You are a career coach AI.
+
+            Target Role: {req.role}
+
+            Resume:
+            {req.resume_text}
+
+            Provide:
+            - Strengths
+            - Missing skills
+            - Resume improvements
+            - ATS optimization tips
+            """
         )
 
-        # ✅ THIS IS THE FIX
+        # ✅ FIX: Convert AgentRunResult safely to text
+        analysis_text = str(result)
+
         return {
-            "analysis": result.output
+            "analysis": analysis_text
         }
 
     except Exception as e:
